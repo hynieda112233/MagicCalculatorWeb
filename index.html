@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <!-- 8桁の数字が電話番号リンクにならないようにする -->
+  <meta name="format-detection" content="telephone=no, date=no, address=no, email=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="計算機">
+  <meta name="theme-color" content="#000000">
+  <title>計算機</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="icons/icon-192.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main id="app">
+    <div id="display" aria-live="polite">
+      <span id="display-text">0</span>
+    </div>
+
+    <div id="keypad">
+      <button class="key function" data-key="clear" id="clear-key" aria-label="オールクリア"><span class="label">AC</span></button>
+      <button class="key function" data-key="toggleSign" aria-label="符号反転">
+        <svg class="icon icon-small" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4 7h7M7.5 3.5v7M17 4 7 20M13 17h7"/>
+        </svg>
+      </button>
+      <button class="key function" data-key="percent" aria-label="パーセント">
+        <svg class="icon icon-small" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="6.5" cy="6.5" r="2.6"/><circle cx="17.5" cy="17.5" r="2.6"/><path d="M19 4 5 20"/>
+        </svg>
+      </button>
+      <button class="key operator" data-key="divide" aria-label="割る">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4 12h16"/><circle class="dot" cx="12" cy="5.5" r="1.7"/><circle class="dot" cx="12" cy="18.5" r="1.7"/>
+        </svg>
+      </button>
+
+      <button class="key digit" data-key="7"><span class="label">7</span></button>
+      <button class="key digit" data-key="8"><span class="label">8</span></button>
+      <button class="key digit" data-key="9"><span class="label">9</span></button>
+      <button class="key operator" data-key="multiply" aria-label="掛ける">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+
+      <button class="key digit" data-key="4"><span class="label">4</span></button>
+      <button class="key digit" data-key="5"><span class="label">5</span></button>
+      <button class="key digit" data-key="6"><span class="label">6</span></button>
+      <button class="key operator" data-key="subtract" aria-label="引く">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h16"/></svg>
+      </button>
+
+      <button class="key digit" data-key="1"><span class="label">1</span></button>
+      <button class="key digit" data-key="2"><span class="label">2</span></button>
+      <button class="key digit" data-key="3"><span class="label">3</span></button>
+      <button class="key operator" data-key="add" id="add-key" aria-label="足す">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h16M12 4v16"/></svg>
+      </button>
+
+      <button class="key digit zero" data-key="0"><span class="label">0</span></button>
+      <button class="key digit" data-key="decimal" aria-label="小数点"><span class="label">.</span></button>
+      <button class="key operator" data-key="equals" aria-label="イコール">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8.5h16M4 15.5h16"/></svg>
+      </button>
+    </div>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
