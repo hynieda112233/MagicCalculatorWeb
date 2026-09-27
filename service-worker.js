@@ -1,7 +1,7 @@
 "use strict";
 
 // ファイルを更新したら、この番号を上げると iPhone 側のキャッシュも新しくなる
-const CACHE_NAME = "magic-calculator-v1";
+const CACHE_NAME = "magic-calculator-v2";
 
 const ASSETS = [
   "./",
