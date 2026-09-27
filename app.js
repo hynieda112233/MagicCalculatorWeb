@@ -39,6 +39,8 @@ const state = {
   isAddSelected: false,
   showsAllClear: true,
   isMagicModeEnabled: false,
+  expressionParts: [],
+  historyText: "",
 };
 
 function currentValue() {
@@ -105,6 +107,13 @@ function toggleSign() {
 function add() {
   if (state.isAwaitingOperand && state.input === null) return;
 
+  const operandText = state.input !== null
+    ? formatInput(state.input)
+    : formatResult(state.displayedValue);
+
+  state.expressionParts.push(operandText, "+");
+  state.historyText = "";
+
   let total = currentValue();
   if (state.runningTotal !== null) total += state.runningTotal;
 
@@ -120,6 +129,13 @@ function performEquals() {
     return;
   }
 
+  const finalParts = [...state.expressionParts];
+  if (state.input !== null) {
+    finalParts.push(formatInput(state.input));
+  } else if (finalParts[finalParts.length - 1] === "+") {
+    finalParts.pop();
+  }
+
   let total = currentValue();
   if (state.runningTotal !== null) {
     total = (state.isAwaitingOperand && state.input === null)
@@ -127,6 +143,7 @@ function performEquals() {
       : state.runningTotal + total;
   }
 
+  state.historyText = finalParts.length ? finalParts.join(" ") + " =" : "";
   resetCalculation();
   showResult(total);
 }
@@ -134,6 +151,7 @@ function performEquals() {
 function clear() {
   if (state.showsAllClear) {
     resetCalculation();
+    state.historyText = "";
     state.displayText = "0";
     return;
   }
@@ -151,6 +169,14 @@ function clear() {
 function showMagicNumber() {
   const magicNumber = generateMagicNumber(new Date());
 
+  const finalParts = [...state.expressionParts];
+  if (state.input !== null) {
+    finalParts.push(formatInput(state.input));
+  } else if (finalParts[finalParts.length - 1] === "+") {
+    finalParts.pop();
+  }
+  state.historyText = finalParts.length ? finalParts.join(" ") + " =" : "";
+
   resetCalculation();
   state.isMagicModeEnabled = false;
 
@@ -159,6 +185,10 @@ function showMagicNumber() {
 }
 
 function startInput(text) {
+  if (state.showsAllClear && state.runningTotal === null && state.input === null) {
+    state.historyText = "";
+    state.expressionParts = [];
+  }
   state.isAwaitingOperand = false;
   state.isAddSelected = false;
   state.showsAllClear = false;
@@ -184,6 +214,7 @@ function resetCalculation() {
   state.isAwaitingOperand = false;
   state.isAddSelected = false;
   state.showsAllClear = true;
+  state.expressionParts = [];
 }
 
 function groupThousands(digits) {
@@ -230,6 +261,7 @@ function formatResult(value) {
 
 const app = document.getElementById("app");
 const display = document.getElementById("display");
+const calculationHistory = document.getElementById("calculation-history");
 const displayText = document.getElementById("display-text");
 const clearLabel = document.querySelector("#clear-key .label");
 const clearKey = document.getElementById("clear-key");
@@ -237,7 +269,16 @@ const addKey = document.getElementById("add-key");
 
 let displayBaseFontSize = 92;
 
+function historyForDisplay() {
+  if (state.input !== null && state.expressionParts.length) {
+    return [...state.expressionParts, formatInput(state.input)].join(" ");
+  }
+  if (state.expressionParts.length) return state.expressionParts.join(" ");
+  return state.historyText;
+}
+
 function render() {
+  calculationHistory.textContent = historyForDisplay();
   displayText.textContent = state.displayText;
   clearLabel.textContent = state.showsAllClear ? "AC" : "C";
   clearKey.setAttribute("aria-label", state.showsAllClear ? "オールクリア" : "クリア");
