@@ -5,27 +5,26 @@
  * ========================================================= */
 
 /**
- * 「＝を押した瞬間 + 1分」の端末ローカル日時を MDDHHmm 形式で返す。
+ * 「＝を押した瞬間」の端末ローカル日時を MDDHHmm 形式で返す。
  * - 月だけは 1〜9 月を1桁、10〜12月を2桁にする
  * - 日・時・分は必ず2桁
- * - 例: 10/11 18:58 に＝ -> 10/11 18:59 -> "10111859"
- * - 例:  9/05 07:05 に＝ ->  9/05 07:06 -> "9050706"
+ * - 例: 10/11 18:58 に＝ -> "10111858"
+ * - 例:  9/05 07:05 に＝ -> "9050705"
  */
 function generateMagicNumber(now = new Date()) {
-  const oneMinuteLater = new Date(now.getTime() + 60 * 1000);
   const pad = (n) => String(n).padStart(2, "0");
   return (
-    String(oneMinuteLater.getMonth() + 1) +
-    pad(oneMinuteLater.getDate()) +
-    pad(oneMinuteLater.getHours()) +
-    pad(oneMinuteLater.getMinutes())
+    String(now.getMonth() + 1) +
+    pad(now.getDate()) +
+    pad(now.getHours()) +
+    pad(now.getMinutes())
   );
 }
 
 /* =========================================================
  * 電卓ロジック（手品用・常時マジック）
  * 使うキー: 数字 / 小数点 / ＋/− / ＋ / ＝ / AC・C
- * × ÷ − % は見た目だけで、押しても何も起きない。＝は常に1分後の日時を出す
+ * × ÷ − % は見た目だけで、押しても何も起きない。＝は常に現在の日時を出す
  * ========================================================= */
 
 const MAX_INPUT_DIGITS = 9;
