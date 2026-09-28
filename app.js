@@ -5,19 +5,20 @@
  * ========================================================= */
 
 /**
- * 「＝を押した瞬間」の端末ローカル日時を MDDHHmm 形式で返す。
+ * 「＝を押した瞬間 + 1分」の端末ローカル日時を MDDHHmm 形式で返す。
  * - 月だけは 1〜9 月を1桁、10〜12月を2桁にする
  * - 日・時・分は必ず2桁
- * - 例: 10/11 18:58 -> "10111858"
- * - 例:  9/05 07:05 -> "9050705"
+ * - 例: 10/11 18:58 に＝ -> 10/11 18:59 -> "10111859"
+ * - 例:  9/05 07:05 に＝ ->  9/05 07:06 -> "9050706"
  */
 function generateMagicNumber(now = new Date()) {
+  const oneMinuteLater = new Date(now.getTime() + 60 * 1000);
   const pad = (n) => String(n).padStart(2, "0");
   return (
-    String(now.getMonth() + 1) +
-    pad(now.getDate()) +
-    pad(now.getHours()) +
-    pad(now.getMinutes())
+    String(oneMinuteLater.getMonth() + 1) +
+    pad(oneMinuteLater.getDate()) +
+    pad(oneMinuteLater.getHours()) +
+    pad(oneMinuteLater.getMinutes())
   );
 }
 
