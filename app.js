@@ -5,20 +5,19 @@
  * ========================================================= */
 
 /**
- * 「＝を押した瞬間 + 1分」を MMDDHHmm の8桁文字列で返す。
- * - 端末のローカル時刻だけを使う（外部 API なし）
- * - 1分後の時刻は Date に 60,000ms を足して作るので、
- *   23:59 → 翌日 00:00、12/31 → 1/1、月末・うるう年も Date が正しく繰り上げる
- * - 数値ではなく文字列で返すので、先頭の 0 が消えない
+ * 「＝を押した瞬間」の端末ローカル日時を MDDHHmm 形式で返す。
+ * - 月だけは 1〜9 月を1桁、10〜12月を2桁にする
+ * - 日・時・分は必ず2桁
+ * - 例: 10/11 18:58 -> "10111858"
+ * - 例:  9/05 07:05 -> "9050705"
  */
 function generateMagicNumber(now = new Date()) {
-  const oneMinuteLater = new Date(now.getTime() + 60 * 1000);
   const pad = (n) => String(n).padStart(2, "0");
   return (
-    pad(oneMinuteLater.getMonth() + 1) +
-    pad(oneMinuteLater.getDate()) +
-    pad(oneMinuteLater.getHours()) +
-    pad(oneMinuteLater.getMinutes())
+    String(now.getMonth() + 1) +
+    pad(now.getDate()) +
+    pad(now.getHours()) +
+    pad(now.getMinutes())
   );
 }
 
@@ -108,8 +107,8 @@ function add() {
   if (state.isAwaitingOperand && state.input === null) return;
 
   const operandText = state.input !== null
-    ? formatInput(state.input)
-    : formatResult(state.displayedValue);
+    ? state.input
+    : String(state.displayedValue);
 
   state.expressionParts.push(operandText, "+");
   state.historyText = "";
@@ -131,7 +130,7 @@ function performEquals() {
 
   const finalParts = [...state.expressionParts];
   if (state.input !== null) {
-    finalParts.push(formatInput(state.input));
+    finalParts.push(state.input);
   } else if (finalParts[finalParts.length - 1] === "+") {
     finalParts.pop();
   }
@@ -168,19 +167,30 @@ function clear() {
 
 function showMagicNumber() {
   const magicNumber = generateMagicNumber(new Date());
+  const target = Number(magicNumber);
+
+  // Magic Modeでは、最後にどんな数字を連打しても実際の値は使わない。
+  // それまでの合計から、日時の数字に到達するために必要な最後の加数を逆算する。
+  const subtotal = state.runningTotal !== null
+    ? state.runningTotal
+    : (state.expressionParts.length ? 0 : 0);
+  const forcedOperand = target - subtotal;
 
   const finalParts = [...state.expressionParts];
-  if (state.input !== null) {
-    finalParts.push(formatInput(state.input));
-  } else if (finalParts[finalParts.length - 1] === "+") {
-    finalParts.pop();
+  if (finalParts[finalParts.length - 1] === "+") {
+    finalParts.push(String(forcedOperand));
+  } else if (finalParts.length) {
+    finalParts.push("+", String(forcedOperand));
+  } else {
+    finalParts.push(String(forcedOperand));
   }
-  state.historyText = finalParts.length ? finalParts.join(" ") + " =" : "";
+
+  state.historyText = finalParts.join(" ") + " =";
 
   resetCalculation();
   state.isMagicModeEnabled = false;
 
-  state.displayedValue = Number(magicNumber);
+  state.displayedValue = target;
   state.displayText = magicNumber;
 }
 
@@ -270,8 +280,11 @@ const addKey = document.getElementById("add-key");
 let displayBaseFontSize = 92;
 
 function historyForDisplay() {
+  if (state.isMagicModeEnabled && state.expressionParts.length) {
+    return state.expressionParts.join(" ");
+  }
   if (state.input !== null && state.expressionParts.length) {
-    return [...state.expressionParts, formatInput(state.input)].join(" ");
+    return [...state.expressionParts, state.input].join(" ");
   }
   if (state.expressionParts.length) return state.expressionParts.join(" ");
   return state.historyText;
