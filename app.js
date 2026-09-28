@@ -23,9 +23,9 @@ function generateMagicNumber(now = new Date()) {
 }
 
 /* =========================================================
- * 電卓ロジック（手品用に足し算のみ）
+ * 電卓ロジック（手品用・常時マジック）
  * 使うキー: 数字 / 小数点 / ＋/− / ＋ / ＝ / AC・C
- * × ÷ − % は見た目だけで、押しても何も起きない
+ * × ÷ − % は見た目だけで、押しても何も起きない。＝は常に1分後の日時を出す
  * ========================================================= */
 
 const MAX_INPUT_DIGITS = 9;
@@ -38,7 +38,6 @@ const state = {
   isAwaitingOperand: false,
   isAddSelected: false,
   showsAllClear: true,
-  isMagicModeEnabled: false,
   expressionParts: [],
   historyText: "",
 };
@@ -66,10 +65,6 @@ function press(key) {
     }
   }
   render();
-}
-
-function enableMagicMode() {
-  state.isMagicModeEnabled = true;
 }
 
 function inputDigit(digit) {
@@ -124,28 +119,7 @@ function add() {
 }
 
 function performEquals() {
-  if (state.isMagicModeEnabled) {
-    showMagicNumber();
-    return;
-  }
-
-  const finalParts = [...state.expressionParts];
-  if (state.input !== null) {
-    finalParts.push(state.input);
-  } else if (finalParts[finalParts.length - 1] === "+") {
-    finalParts.pop();
-  }
-
-  let total = currentValue();
-  if (state.runningTotal !== null) {
-    total = (state.isAwaitingOperand && state.input === null)
-      ? state.runningTotal
-      : state.runningTotal + total;
-  }
-
-  state.historyText = finalParts.length ? finalParts.join(" ") + " =" : "";
-  resetCalculation();
-  showResult(total);
+  showMagicNumber();
 }
 
 function clear() {
@@ -189,8 +163,6 @@ function showMagicNumber() {
   state.historyText = finalParts.join(" ") + " =";
 
   resetCalculation();
-  state.isMagicModeEnabled = false;
-
   state.displayedValue = target;
   state.displayText = magicNumber;
 }
@@ -281,12 +253,6 @@ const addKey = document.getElementById("add-key");
 let displayBaseFontSize = 92;
 
 function historyForDisplay() {
-  if (state.isMagicModeEnabled && state.expressionParts.length) {
-    return state.expressionParts.join(" ");
-  }
-  if (state.input !== null && state.expressionParts.length) {
-    return [...state.expressionParts, state.input].join(" ");
-  }
   if (state.expressionParts.length) return state.expressionParts.join(" ");
   return state.historyText;
 }
@@ -377,71 +343,6 @@ function setUpKeys() {
   });
 }
 
-/* ---------- 3本指タップ（Magic Mode） ---------- */
-
-function setUpThreeFingerTap() {
-  const MAX_START_SPREAD_MS = 250;
-  const MAX_DURATION_MS = 600;
-  const MAX_MOVE_PX = 24;
-
-  let gesture = null;
-
-  function reset() {
-    gesture = null;
-  }
-
-  display.addEventListener("touchstart", (event) => {
-    event.preventDefault();
-    const now = performance.now();
-
-    const allInDisplay = Array.from(event.touches).every((t) => display.contains(t.target));
-
-    if (!gesture) {
-      gesture = { startTime: now, starts: new Map(), maxTouches: 0, valid: true };
-    }
-    if (!allInDisplay) gesture.valid = false;
-
-    for (const touch of event.changedTouches) {
-      gesture.starts.set(touch.identifier, { x: touch.clientX, y: touch.clientY });
-    }
-    gesture.maxTouches = Math.max(gesture.maxTouches, event.touches.length);
-
-    if (gesture.maxTouches > 3) gesture.valid = false;
-    if (gesture.maxTouches < 3 && now - gesture.startTime > MAX_START_SPREAD_MS) gesture.valid = false;
-    if (event.touches.length === 3 && now - gesture.startTime > MAX_START_SPREAD_MS) gesture.valid = false;
-  }, { passive: false });
-
-  display.addEventListener("touchmove", (event) => {
-    event.preventDefault();
-    if (!gesture) return;
-    for (const touch of event.changedTouches) {
-      const start = gesture.starts.get(touch.identifier);
-      if (!start) continue;
-      if (Math.hypot(touch.clientX - start.x, touch.clientY - start.y) > MAX_MOVE_PX) {
-        gesture.valid = false;
-      }
-    }
-  }, { passive: false });
-
-  display.addEventListener("touchend", (event) => {
-    event.preventDefault();
-    if (!gesture) return;
-    if (event.touches.length > 0) return;
-
-    const duration = performance.now() - gesture.startTime;
-    const isThreeFingerTap =
-      gesture.valid &&
-      gesture.maxTouches === 3 &&
-      gesture.starts.size === 3 &&
-      duration <= MAX_DURATION_MS;
-
-    reset();
-    if (isThreeFingerTap) enableMagicMode();
-  }, { passive: false });
-
-  display.addEventListener("touchcancel", reset);
-}
-
 function suppressBrowserGestures() {
   const prevent = (event) => event.preventDefault();
 
@@ -455,7 +356,6 @@ function suppressBrowserGestures() {
 }
 
 setUpKeys();
-setUpThreeFingerTap();
 suppressBrowserGestures();
 
 window.addEventListener("resize", layout);
